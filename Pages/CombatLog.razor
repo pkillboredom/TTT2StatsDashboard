@@ -1,0 +1,52 @@
+﻿@page "/combatlog"
+@using TTT2StatsApi.Models;
+@using System.Globalization;
+@inject HttpClient client;
+@using Microsoft.Extensions.Configuration;
+@inject IConfiguration configuration;
+@inject ILogger<CombatLog> logger;
+
+<h3>Combat Log</h3>
+<p>Most Recent First</p>
+<table class="pure-table pure-table-striped">
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>Attacker</th>
+            <th>Victim</th>
+            <th>Damage</th>
+            <th>Health Remaining</th>
+            <th>Weapon</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in combatLogRows)
+        {
+            <tr>
+                <td style="white-space: nowrap">@(DateTimeOffset
+                    .FromUnixTimeSeconds(item.DamageTime)
+                    .DateTime
+                    .ToLocalTime()
+                    .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))</td>
+                <td>@item.AttackerName</td>
+                <td>@item.VictimName</td>
+                <td>@item.DamageDealt</td>
+                <td>@item.HealthRemaining</td>
+                <td>@item.Weapon</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private IEnumerable<CombatLogRow> combatLogRows = new List<CombatLogRow>();
+    private string apiBaseUrl = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        logger.LogTrace("OnInitializedAsync");
+        apiBaseUrl = configuration["apiBaseUrl"];
+        logger.LogTrace("SetBaseUrl");
+        combatLogRows = await client.GetFromJsonAsync<IEnumerable<CombatLogRow>>(apiBaseUrl + "/DamageLog");
+    }
+}

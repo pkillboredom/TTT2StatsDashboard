@@ -1,0 +1,63 @@
+﻿@page "/rounds"
+@using TTT2StatsApi.Models;
+@using System.Globalization;
+@inject HttpClient client;
+@using Microsoft.Extensions.Configuration;
+@inject IConfiguration configuration;
+@inject ILogger<Rounds> logger;
+
+<h3>Rounds</h3>
+<p>Most Recent First</p>
+<table class="pure-table pure-table-striped">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Map</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Ended Normally</th>
+            <th>Result</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in rounds)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Map</td>
+                <td style="white-space: nowrap">@(DateTimeOffset
+                    .FromUnixTimeSeconds(item.StartTime)
+                    .DateTime
+                    .ToLocalTime()
+                    .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))</td>
+                <td style="white-space: nowrap">
+                    @if(item.EndTime != null)
+                    {
+                        @(DateTimeOffset
+                        .FromUnixTimeSeconds(item.EndTime ?? 0)
+                        .DateTime
+                        .ToLocalTime()
+                        .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))
+                    }
+                </td>
+                <td>@if(item.EndedNormally)
+                    {
+                        <div>✅</div>
+                    }
+                </td>
+                <td>@item.Result</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private IEnumerable<RoundRow> rounds = new List<RoundRow>();
+    private string apiBaseUrl = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        apiBaseUrl = configuration["apiBaseUrl"];
+        rounds = await client.GetFromJsonAsync<IEnumerable<RoundRow>>(apiBaseUrl + "/Round");
+    }
+}
