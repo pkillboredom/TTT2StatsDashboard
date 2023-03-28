@@ -8,48 +8,139 @@
 
 <h3>Rounds</h3>
 <p>Most Recent First</p>
-<table class="pure-table pure-table-striped">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>Map</th>
-            <th>Start Time</th>
-            <th>End Time</th>
-            <th>Ended Normally</th>
-            <th>Result</th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in rounds)
-        {
-            <tr>
-                <td>@item.Id</td>
-                <td>@item.Map</td>
-                <td style="white-space: nowrap">@(DateTimeOffset
-                    .FromUnixTimeSeconds(item.StartTime)
-                    .DateTime
-                    .ToLocalTime()
-                    .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))</td>
-                <td style="white-space: nowrap">
-                    @if(item.EndTime != null)
+<div id="roundTableDiv">
+    <ErrorBoundary>
+        <ChildContent>
+            <table id="roundTable" class="pure-table pure-table-striped">
+                <thead id="RoundTableHeader">
+                    <tr id="RoundHeaderRow">
+                        <th>Id</th>
+                        <th>Map</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Ended Normally</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var roundItem in rounds)
+                {
+                    <tr @onclick="@(async args => await HandleRowClick(roundItem.Id))">
+                        <td>@roundItem.Id</td>
+                        <td>@roundItem.Map</td>
+                        <td style="white-space: nowrap">@(DateTimeOffset
+                            .FromUnixTimeSeconds(roundItem.StartTime)
+                            .DateTime
+                            .ToLocalTime()
+                            .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))</td>
+                        <td style="white-space: nowrap">
+                            @if(roundItem.EndTime != null)
+                            {
+                                @(DateTimeOffset
+                                .FromUnixTimeSeconds(roundItem.EndTime ?? 0)
+                                .DateTime
+                                .ToLocalTime()
+                                .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))
+                            }
+                        </td>
+                        <td>@if(roundItem.EndedNormally)
+                            {
+                                <p class="t-align-center t-emoji">✅</p>
+                            }
+                        </td>
+                        <td>@roundItem.Result</td>
+                    </tr>
+                    @if(openRowId == roundItem.Id)
                     {
-                        @(DateTimeOffset
-                        .FromUnixTimeSeconds(item.EndTime ?? 0)
-                        .DateTime
-                        .ToLocalTime()
-                        .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))
+                        <tr>
+                            <td colspan="6" class="container">
+                                <div class="row w-auto">
+                                    <div class="col-xs-3 w-auto">
+                                        <p class="text-nowrap fw-bold">@roundItem.Map</p>
+                                        <!--Replace with map image-->
+                                        <img src="~/icon-192.png" alt="Map icon for @roundItem.Map" class="rounded">
+                                    </div>
+                                    <div class="col-xs w-auto">
+                                        <ErrorBoundary>
+                                            <ChildContent>
+                                                <div class="w-auto">
+                                                    @if(rowValidForInfos)
+                                                    {
+                                                        @if(playerRoundInfos != null)
+                                                        {
+                                                            <table id=@($"round-{roundItem.Id}-PlayerInfoTable") class="pure-table">
+                                                                <thead id=@($"round-{roundItem.Id}-PlayerInfoHeader")>
+                                                                    <tr>
+                                                                        <th>Player</th>
+                                                                        <th>Role</th>
+                                                                        <th>Start Karma</th>
+                                                                        <th>End Karma</th>
+                                                                        <th>Died</th>
+                                                                        <th>Cause Of Death</th>
+                                                                        <th>Time Of Death</th>
+                                                                        <th>Died Midair</th>
+                                                                        <th>Headshot</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="">
+                                                                    @foreach (var infoItem in playerRoundInfos)
+                                                                    {
+                                                                        <tr id=@($"round-{roundItem.Id}-player-{infoItem.SteamId}-infoRow")>
+                                                                            <td>@infoItem.FriendlyName</td>
+                                                                            <!--Replace with friendly name derived from int-->
+                                                                            <td>@infoItem.PlayerRole</td>
+                                                                            <td>@infoItem.StartingKarma</td>
+                                                                            <td>@infoItem.EndingKarma</td>
+                                                                            <td class="t-align-center"><p class="t-emoji">@(infoItem.PlayerDied ? "☠️" : "")</p></td>
+                                                                            <td>@infoItem.DeathCause</td>
+                                                                            <td>
+                                                                                @if(infoItem.DeathTime != null)
+                                                                                @(DateTimeOffset
+                                                                                    .FromUnixTimeSeconds(infoItem.DeathTime ?? 0)
+                                                                                    .DateTime
+                                                                                    .ToLocalTime()
+                                                                                    .ToString("HH:mm:ss", CultureInfo.CurrentCulture))
+                                                                            </td>
+                                                                            <td class="t-align-center"><p class="t-emoji">@(infoItem.AirborneDeath ?? false ? "🛫" : "")</p></td>
+                                                                            <td class="t-align-center"><p class="t-emoji">@(infoItem.HeadshotDeath ?? false ? "🤯" : "")</p></td>
+                                                                        </tr>
+                                                                    }
+                                                                </tbody>
+                                                            </table>
+                                                        }
+                                                        else 
+                                                        {
+                                                            <div class="loading-progress">Loading...</div>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="d-flex">
+                                                            <div class="justify-content-center align-content-center">
+                                                                <p>Detailed info is unavailable for incomplete rounds.</p>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </ChildContent>
+                                            <ErrorContent>
+                                                <p>There was an error loading the info for this round :(</p>
+                                            </ErrorContent>
+                                        </ErrorBoundary>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
                     }
-                </td>
-                <td>@if(item.EndedNormally)
-                    {
-                        <div>✅</div>
-                    }
-                </td>
-                <td>@item.Result</td>
-            </tr>
-        }
-    </tbody>
-</table>
+                }
+                </tbody>
+            </table>
+        </ChildContent>
+        <ErrorContent>
+            <p>There was an error loading the Rounds table :(</p>
+        </ErrorContent>
+    </ErrorBoundary>
+</div>
 
 @code {
     private IEnumerable<RoundRow> rounds = new List<RoundRow>();
@@ -59,5 +150,37 @@
     {
         apiBaseUrl = configuration["apiBaseUrl"];
         rounds = await client.GetFromJsonAsync<IEnumerable<RoundRow>>(apiBaseUrl + "/Round");
+    }
+
+    private long? openRowId = null;
+    private bool rowValidForInfos = false;
+    private IEnumerable<PlayerRoundInfoRow>? playerRoundInfos = null;
+
+    private async Task FetchPlayerRoundInfos(long roundId)
+    {
+        playerRoundInfos = await client.GetFromJsonAsync<IEnumerable<PlayerRoundInfoRow>>($"{apiBaseUrl}/Round/{roundId}/Players");
+        StateHasChanged();
+    }
+
+    private async Task HandleRowClick(long roundId)
+    {
+        if (openRowId == roundId)
+        {
+            openRowId = null;
+            rowValidForInfos = false;
+            playerRoundInfos = null;
+        }
+        else
+        {
+            playerRoundInfos = null;
+            rowValidForInfos = false;
+            openRowId = roundId;
+            var round = rounds.FirstOrDefault(round => round.Id == roundId);
+            if (round != null && round.EndedNormally == true)
+            {
+                rowValidForInfos = true;
+                _ = FetchPlayerRoundInfos(roundId);
+            }
+        }
     }
 }

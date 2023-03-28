@@ -99,3 +99,17 @@ a, .btn-link {
     .loading-progress-text:after {
         content: var(--blazor-load-percentage-text, "Loading");
     }
+
+.t-align-center {
+    text-align: center;
+}
+
+.t-emoji {
+    font-size: 16pt;
+    padding: 0;
+    margin: 0;
+}
+
+.pure-table td{
+    padding: 0.25rem 0.5rem 0.25rem 0.5rem;
+}
