@@ -20,26 +20,29 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in combatLogRows)
+        @if (combatLogRows != null)
         {
-            <tr>
-                <td style="white-space: nowrap">@(DateTimeOffset
-                    .FromUnixTimeSeconds(item.DamageTime)
-                    .DateTime
-                    .ToLocalTime()
-                    .ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture))</td>
-                <td>@item.AttackerName</td>
-                <td>@item.VictimName</td>
-                <td>@item.DamageDealt.ToRoundedString()</td>
-                <td>@item.HealthRemaining.ToRoundedString()</td>
-                <td>@item.Weapon</td>
-            </tr>
+            @foreach (var item in combatLogRows)
+            {
+                <tr>
+                    <td style="white-space: nowrap">@(DateTimeOffset
+                        .FromUnixTimeSeconds(item.DamageTime)
+                        .DateTime
+                        .ToLocalTime()
+                        .ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture))</td>
+                    <td>@item.AttackerName</td>
+                    <td>@item.VictimName</td>
+                    <td>@item.DamageDealt.ToRoundedString()</td>
+                    <td>@item.HealthRemaining.ToRoundedString()</td>
+                    <td>@item.Weapon</td>
+                </tr>
+            }
         }
     </tbody>
 </table>
 
 @code {
-    private IEnumerable<CombatLogRow> combatLogRows = new List<CombatLogRow>();
+    private List<CombatLogRow>? combatLogRows = new List<CombatLogRow>();
     [CascadingParameter(Name = "ApiBaseUrl")]
     protected string apiBaseUrl { get; set; }
 
@@ -47,6 +50,6 @@
     {
         logger.LogTrace("OnInitializedAsync");
         logger.LogTrace("SetBaseUrl");
-        combatLogRows = await client.GetFromJsonAsync<IEnumerable<CombatLogRow>>(apiBaseUrl + "/DamageLog");
+        combatLogRows = (await client.GetFromJsonAsync<IEnumerable<CombatLogRow>>(apiBaseUrl + "/DamageLog"))?.OrderByDescending(clr => clr.Id)?.ToList();
     }
 }
