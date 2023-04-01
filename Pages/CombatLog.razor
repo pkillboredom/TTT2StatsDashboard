@@ -40,7 +40,7 @@
 
 @code {
     private IEnumerable<CombatLogRow> combatLogRows = new List<CombatLogRow>();
-    [CascadingParameter]
+    [CascadingParameter(Name = "ApiBaseUrl")]
     protected string apiBaseUrl { get; set; }
 
     protected override async Task OnInitializedAsync()
