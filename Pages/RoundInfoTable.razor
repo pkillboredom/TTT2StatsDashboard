@@ -1,0 +1,128 @@
+﻿@using TTT2StatsApi.Models;
+@using System.Globalization;
+@inject HttpClient client;
+@using Microsoft.Extensions.Configuration;
+@inject IConfiguration configuration;
+@inject ILogger<Rounds> logger;
+
+<table id=@($"round-{roundItem.Id}-PlayerInfoTable") class="pure-table w-100">
+    <thead id=@($"round-{roundItem.Id}-PlayerInfoHeader")>
+        <tr>
+            <th>Player</th>
+            <th>Role</th>
+            <th>Start Karma</th>
+            <th>End Karma</th>
+            <th>Kills</th>
+            <th>Deaths</th>
+        </tr>
+    </thead>
+    <tbody id="@($"round-{roundItem.Id}-PlayerInfoBody")">
+        @foreach (var infoItem in playerRoundInfos)
+        {
+            <tr id=@($"round-{roundItem.Id}-player-{infoItem.SteamId}-infoRow") @onclick="@(async args => await HandleRowClick(infoItem.SteamId))">
+                <td>@infoItem.FriendlyName</td>
+                <!--Replace with friendly name derived from int-->
+                <td>@infoItem.PlayerRole</td>
+                <td>@infoItem.StartingKarma</td>
+                <td>@infoItem.EndingKarma</td>
+                <td class="t-align-center">
+                    <p class="t-emoji">
+                        @infoItem.Kills
+                    </p>
+                </td>
+                <td class="t-align-center">
+                    <p class="t-emoji">
+                        @infoItem.Deaths
+                    </p>
+                </td>
+            </tr>
+            @if(openSteamId == infoItem.SteamId && playerDeathRows != null)
+            {
+                <tr>
+                    <td colspan="6" class="">
+                        <div class="d-flex flex-row">
+                            <div class="p-2">
+                                <table id=@($"round-{roundItem.Id}-player-{infoItem.SteamId}-deathTable") class="pure-table w-100">
+                                    <thead id=@($"round-{roundItem.Id}-player-{infoItem.SteamId}-deathHeader")>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Victim</th>
+                                            <th>Killer</th>
+                                            <th>Cause</th>
+                                            <th>Special</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id=@($"round-{roundItem.Id}-player-{infoItem.SteamId}-deathBody")>
+                                        @foreach (var deathItem in playerDeathRows)
+                                        {
+                                            <tr id=@($"round-{roundItem.Id}-player-{infoItem.SteamId}-death-{deathItem.id}-deathRow")>
+                                                <td style="white-space: nowrap">@(DateTimeOffset
+                                                    .FromUnixTimeSeconds(deathItem.DeathTime)
+                                                    .DateTime
+                                                    .ToLocalTime()
+                                                    .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))</td>
+                                                <td class="@(deathItem.VictimSteamId == infoItem.SteamId ? "fw-bold" : "")">@deathItem.VictimName</td>
+                                                <td class="@(deathItem.KillerSteamId == infoItem.SteamId ? "fw-bold" : "")">@deathItem.KillerName</td>
+                                                <td>@deathItem.DeathCause</td>
+                                                <td class="t-align-center t-emoji">
+                                                    @if (deathItem.DeathFlags != null)
+                                                    {
+                                                        @if (deathItem.DeathFlags.ContainsKey("headshot"))
+                                                        {
+                                                            <span class="p-2">🤯</span>
+                                                        }
+                                                        @if (deathItem.DeathFlags.ContainsKey("burned"))
+                                                        {
+                                                            <span class="p-2">🔥</span>
+                                                        }
+                                                        @if (deathItem.DeathFlags.ContainsKey("airborne"))
+                                                        {
+                                                            <span class="p-2">✈️</span>
+                                                        }
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    [CascadingParameter(Name = "RoundItem")]
+    public RoundRow roundItem { get; set; }
+    [CascadingParameter(Name = "PlayerRoundInfos")]
+    public IEnumerable<PlayerRoundInfoRow> playerRoundInfos { get; set; }
+    [CascadingParameter(Name = "ApiBaseUrl")]
+    protected string apiBaseUrl { get; set; }
+
+    private string? openSteamId = null;
+    private IEnumerable<PlayerDeathRow>? playerDeathRows = null;
+
+    private async Task FetchPlayerRoundDeathsData(long roundId, string steamId)
+    {
+        playerDeathRows = await client.GetFromJsonAsync<IEnumerable<PlayerDeathRow>>($"{apiBaseUrl}/Round/{roundId}/DeathsByPlayer/{steamId}");
+        StateHasChanged();
+    }
+
+    private async Task HandleRowClick(string steamId)
+    {
+        if (openSteamId == steamId)
+        {
+            openSteamId = null;
+            playerDeathRows = null;
+        }
+        else
+        {
+            playerDeathRows = null;
+            openSteamId = steamId;
+            _ = FetchPlayerRoundDeathsData(roundItem.Id, steamId);
+        }
+    }
+}

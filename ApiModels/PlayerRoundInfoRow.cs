@@ -8,10 +8,7 @@
         public string PlayerRole { get; set; }
         public double StartingKarma { get; set; }
         public double EndingKarma { get; set; }
-        public bool PlayerDied { get; set; }
-        public string? DeathCause { get; set; }
-        public bool? AirborneDeath { get; set; }
-        public bool? HeadshotDeath { get; set; }
-        public long? DeathTime { get; set; }
+        public long Kills { get; set; }
+        public long Deaths { get; set; }
     }
 }

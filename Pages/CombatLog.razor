@@ -40,12 +40,12 @@
 
 @code {
     private IEnumerable<CombatLogRow> combatLogRows = new List<CombatLogRow>();
-    private string apiBaseUrl = "";
+    [CascadingParameter]
+    protected string apiBaseUrl { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         logger.LogTrace("OnInitializedAsync");
-        apiBaseUrl = configuration["apiBaseUrl"];
         logger.LogTrace("SetBaseUrl");
         combatLogRows = await client.GetFromJsonAsync<IEnumerable<CombatLogRow>>(apiBaseUrl + "/DamageLog");
     }

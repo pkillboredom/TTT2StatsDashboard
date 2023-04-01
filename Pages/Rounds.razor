@@ -8,7 +8,7 @@
 
 <h3>Rounds</h3>
 <p>Most Recent First</p>
-<div id="roundTableDiv">
+<div id="roundTableDiv" class="row">
     <ErrorBoundary>
         <ChildContent>
             <table id="roundTable" class="pure-table pure-table-striped">
@@ -53,60 +53,25 @@
                     @if(openRowId == roundItem.Id)
                     {
                         <tr>
-                            <td colspan="6" class="container">
-                                <div class="row w-auto">
-                                    <div class="col-xs-3 w-auto">
-                                        <p class="text-nowrap fw-bold">@roundItem.Map</p>
-                                        <!--Replace with map image-->
-                                        <img src="~/icon-192.png" alt="Map icon for @roundItem.Map" class="rounded">
-                                    </div>
-                                    <div class="col-xs w-auto">
-                                        <ErrorBoundary>
-                                            <ChildContent>
-                                                <div class="w-auto">
+                            <td colspan="6" class="">
+                                    <div class="d-flex flex-row">
+                                        <div class="p-2">
+                                                <p class="text-nowrap fw-bold">@roundItem.Map</p>
+                                                <!--Replace with map image-->
+                                                <img src="~/icon-192.png" alt="Map icon for @roundItem.Map" class="rounded">
+                                        </div>
+                                        <div class="flex-grow-1 p-2">
+                                            <ErrorBoundary>
+                                                <ChildContent>
                                                     @if(rowValidForInfos)
                                                     {
                                                         @if(playerRoundInfos != null)
                                                         {
-                                                            <table id=@($"round-{roundItem.Id}-PlayerInfoTable") class="pure-table">
-                                                                <thead id=@($"round-{roundItem.Id}-PlayerInfoHeader")>
-                                                                    <tr>
-                                                                        <th>Player</th>
-                                                                        <th>Role</th>
-                                                                        <th>Start Karma</th>
-                                                                        <th>End Karma</th>
-                                                                        <th>Died</th>
-                                                                        <th>Cause Of Death</th>
-                                                                        <th>Time Of Death</th>
-                                                                        <th>Died Midair</th>
-                                                                        <th>Headshot</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody id="">
-                                                                    @foreach (var infoItem in playerRoundInfos)
-                                                                    {
-                                                                        <tr id=@($"round-{roundItem.Id}-player-{infoItem.SteamId}-infoRow")>
-                                                                            <td>@infoItem.FriendlyName</td>
-                                                                            <!--Replace with friendly name derived from int-->
-                                                                            <td>@infoItem.PlayerRole</td>
-                                                                            <td>@infoItem.StartingKarma</td>
-                                                                            <td>@infoItem.EndingKarma</td>
-                                                                            <td class="t-align-center"><p class="t-emoji">@(infoItem.PlayerDied ? "☠️" : "")</p></td>
-                                                                            <td>@infoItem.DeathCause</td>
-                                                                            <td>
-                                                                                @if(infoItem.DeathTime != null)
-                                                                                @(DateTimeOffset
-                                                                                    .FromUnixTimeSeconds(infoItem.DeathTime ?? 0)
-                                                                                    .DateTime
-                                                                                    .ToLocalTime()
-                                                                                    .ToString("HH:mm:ss", CultureInfo.CurrentCulture))
-                                                                            </td>
-                                                                            <td class="t-align-center"><p class="t-emoji">@(infoItem.AirborneDeath ?? false ? "🛫" : "")</p></td>
-                                                                            <td class="t-align-center"><p class="t-emoji">@(infoItem.HeadshotDeath ?? false ? "🤯" : "")</p></td>
-                                                                        </tr>
-                                                                    }
-                                                                </tbody>
-                                                            </table>
+                                                            <CascadingValue Value="@roundItem" Name="RoundItem">
+                                                                <CascadingValue Value="@playerRoundInfos" Name="PlayerRoundInfos">
+                                                                    <RoundInfoTable />
+                                                                </CascadingValue>
+                                                            </CascadingValue>
                                                         }
                                                         else 
                                                         {
@@ -121,14 +86,13 @@
                                                             </div>
                                                         </div>
                                                     }
-                                                </div>
-                                            </ChildContent>
-                                            <ErrorContent>
-                                                <p>There was an error loading the info for this round :(</p>
-                                            </ErrorContent>
-                                        </ErrorBoundary>
+                                                </ChildContent>
+                                                <ErrorContent>
+                                                    <p>There was an error loading the info for this round :(</p>
+                                                </ErrorContent>
+                                            </ErrorBoundary>
+                                        </div>
                                     </div>
-                                </div>
                             </td>
                         </tr>
                     }
@@ -144,11 +108,11 @@
 
 @code {
     private IEnumerable<RoundRow> rounds = new List<RoundRow>();
-    private string apiBaseUrl = "";
+    [CascadingParameter(Name = "ApiBaseUrl")]
+    protected string apiBaseUrl { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        apiBaseUrl = configuration["apiBaseUrl"];
         rounds = await client.GetFromJsonAsync<IEnumerable<RoundRow>>(apiBaseUrl + "/Round");
     }
 

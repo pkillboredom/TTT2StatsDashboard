@@ -1,13 +1,27 @@
 ﻿@inherits LayoutComponentBase
 
+@using Microsoft.Extensions.Configuration;
+@inject IConfiguration configuration;
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
-    <main>
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+    <CascadingValue Value="@apiBaseUrl" Name="ApiBaseUrl">
+        <main>
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </CascadingValue>
 </div>
+
+@code {
+    private string apiBaseUrl = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        apiBaseUrl = configuration["apiBaseUrl"];
+    }
+}
