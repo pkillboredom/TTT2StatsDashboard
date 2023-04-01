@@ -22,9 +22,9 @@
             <tr id=@($"round-{roundItem.Id}-player-{infoItem.SteamId}-infoRow") @onclick="@(async args => await HandleRowClick(infoItem.SteamId))">
                 <td>@infoItem.FriendlyName</td>
                 <!--Replace with friendly name derived from int-->
-                <td>@infoItem.PlayerRole</td>
-                <td>@infoItem.StartingKarma</td>
-                <td>@infoItem.EndingKarma</td>
+                <td>@infoItem.PlayerRole.ToRoleFriendlyName()</td>
+                <td>@infoItem.StartingKarma.ToRoundedString()</td>
+                <td>@infoItem.EndingKarma.ToRoundedString()</td>
                 <td class="t-align-center">
                     <p class="t-emoji">
                         @infoItem.Kills
@@ -60,7 +60,7 @@
                                                     .FromUnixTimeSeconds(deathItem.DeathTime)
                                                     .DateTime
                                                     .ToLocalTime()
-                                                    .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))</td>
+                                                    .ToString("HH:mm:ss", CultureInfo.CurrentCulture))</td>
                                                 <td class="@(deathItem.VictimSteamId == infoItem.SteamId ? "fw-bold" : "")">@deathItem.VictimName</td>
                                                 <td class="@(deathItem.KillerSteamId == infoItem.SteamId ? "fw-bold" : "")">@deathItem.KillerName</td>
                                                 <td>@deathItem.DeathCause</td>

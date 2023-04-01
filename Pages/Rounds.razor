@@ -7,7 +7,7 @@
 @inject ILogger<Rounds> logger;
 
 <h3>Rounds</h3>
-<p>Most Recent First</p>
+<p>Most Recent First - All Times In Your Local Time</p>
 <div id="roundTableDiv" class="row">
     <ErrorBoundary>
         <ChildContent>
@@ -25,22 +25,30 @@
                 <tbody>
                 @foreach (var roundItem in rounds)
                 {
+                    DateTime startDateTime = DateTimeOffset
+                    .FromUnixTimeSeconds(roundItem.StartTime)
+                    .DateTime
+                    .ToLocalTime();
+                    DateTime? endDateTime = null;
+                    if (roundItem.EndTime != null)
+                    {
+                        endDateTime = DateTimeOffset
+                        .FromUnixTimeSeconds(roundItem.EndTime ?? 0)
+                        .DateTime
+                        .ToLocalTime();
+                    }
+
                     <tr @onclick="@(async args => await HandleRowClick(roundItem.Id))">
                         <td>@roundItem.Id</td>
                         <td>@roundItem.Map</td>
-                        <td style="white-space: nowrap">@(DateTimeOffset
-                            .FromUnixTimeSeconds(roundItem.StartTime)
-                            .DateTime
-                            .ToLocalTime()
-                            .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))</td>
+                            <td style="white-space: nowrap">
+                                @(startDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture))
+                            </td>
                         <td style="white-space: nowrap">
-                            @if(roundItem.EndTime != null)
+                            @if(endDateTime != null)
                             {
-                                @(DateTimeOffset
-                                .FromUnixTimeSeconds(roundItem.EndTime ?? 0)
-                                .DateTime
-                                .ToLocalTime()
-                                .ToString("yyyy-MM-dd HH:mm:ss zzz", CultureInfo.CurrentCulture))
+                                string timeFormat = startDateTime.DayOfYear == endDateTime?.DayOfYear ? "HH:mm:ss" : "yyyy-MM-dd HH:mm:ss";
+                                @(endDateTime?.ToString(timeFormat, CultureInfo.CurrentCulture))
                             }
                         </td>
                         <td>@if(roundItem.EndedNormally)
