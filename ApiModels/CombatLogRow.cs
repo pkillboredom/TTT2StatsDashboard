@@ -2,6 +2,7 @@
 {
     public class CombatLogRow
     {
+        public long Id { get; set; }
         public long DamageTime { get; set; }
         public string AttackerName { get; set; }
         public string AttackerSteamId { get; set; }
