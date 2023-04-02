@@ -14,6 +14,8 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
+    env:
+      appsettingsjson: ${{join(["{\"ApiBaseUrl\":","\"${{secrets.APIBASEURL}}\""}])}}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -26,7 +28,7 @@ jobs:
           # The name of the file to be written. | file.json 
           name: appsettings.Production.json
           # The json string that can be a secret of the github repo or a string of a json. | "{"title": "my json"}" 
-          json: join(["{\"ApiBaseUrl\":\"",${{ secrets.APIBASEURL }},"\" }"])
+          json: ${{ env.appsettingsjson }}
           # Optional subfolder directory to save the json file. | src/ 
           dir: wwwroot/
       - name: Build And Deploy
