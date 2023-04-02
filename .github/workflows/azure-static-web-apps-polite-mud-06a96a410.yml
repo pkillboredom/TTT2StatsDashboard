@@ -18,6 +18,17 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - name: create-json
+        # You may pin to the exact commit or the version.
+        # uses: jsdaniell/create-json@6c509494d7b009b842fb0a158852ba244920bc38
+        uses: jsdaniell/create-json@v1.2.2
+        with:
+          # The name of the file to be written. | file.json 
+          name: appsettings.Production.json
+          # The json string that can be a secret of the github repo or a string of a json. | "{"title": "my json"}" 
+          json: join(["{\"ApiBaseUrl\":\"",${{ secrets.APIBASEURL }},"\" }"])
+          # Optional subfolder directory to save the json file. | src/ 
+          dir: wwwroot/
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
