@@ -8,6 +8,7 @@
             {
                 if (str == "0") return "Innocent";
                 if (str == "1") return "Traitor";
+                if (str == "2") return "Detective";
             }
             return str;
         }
